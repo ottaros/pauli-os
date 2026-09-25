@@ -1,32 +1,39 @@
 # Pauli OS
 
-Um chalé 2D interativo para rotina pessoal e criação de conteúdo. React + TypeScript + Vite, publicado no Cloudflare Pages e conectado ao Supabase existente.
+Um chalé 2D habitável para vida pessoal, TikTok e trabalho profissional. React + TypeScript + Vite. GitHub main → Cloudflare Pages → Supabase.
 
-## Desenvolvimento
+## Desenvolvimento e publicação
+Node 22+. `npm ci`, `npm run dev`, `npm test`, `npm run build`. Cloudflare Pages usa `npm run build`, pasta `dist`, raiz do repositório. Produção: https://pauli-os.pages.dev.
 
-Node 22 ou mais recente. Execute `npm ci`, `npm run dev`. Build de produção: `npm run build` (saída `dist`). Testes: `npm test`.
+## A casa
+O mapa preserva o chalé original. As placas selecionam um ambiente e oferecem entrada opcional. As cenas expandidas mostram apenas o ambiente escolhido. Cozinha, biblioteca e porão são alas acessadas no jardim; Café Work tem uma cena externa própria.
 
-## Publicação
+- Quarto pessoal: cama, rotina, yoga, diário por data e Daily Remembers. Sem tarefas de TikTok.
+- Estúdio: sentar no computador abre o hub TikTok, com briefing, tarefas/planejamento e os produtos, vídeos, hooks e métricas existentes.
+- Sala: sofá utilizável e lareira com estado persistente.
+- Cozinha: preparar, carregar, tomar e guardar café; mesa utilizável; jornal manual paginado e rádio preparado.
+- Biblioteca: livros para abrir briefings e Daily Remembers antigos e ideias.
+- Porão: caixa persistente de experimentos.
+- Café Work: mesa/computador e caderno de tarefas profissionais, separado do TikTok.
+- Gepetinho: poltrona, mural de ideias e interface de conversa desativada. O NPC usa cozinha, sofá, biblioteca, estúdio, café e seu quarto. Nunca entra no quarto da Pauli.
 
-GitHub `main` → Cloudflare Pages → Supabase. Preset Vite ou None, comando `npm run build`, saída `dist`, raiz do repositório. `wrangler.toml` registra a saída do Pages. Não há Functions nem dependência de APIs pagas.
+## Arquitetura do mundo
+`World.tsx` registra objetos com posição de aproximação, pose e ação. `inhabitants.mjs` centraliza permissões, aproximação, chegada, saída e trajetos pelo corredor/escada. Avatares têm estados idle, walking, sitting, lying, using e drinking; `Avatar.tsx` é o ponto único para substituir a arte/sprites. As transições são locais e não usam IA. Animações respeitam prefers-reduced-motion.
 
-## V1
+Lareira e rádio persistem em `house_state`. Poses e xícaras são efêmeras da sessão. O diário fica em `journal_entries` com unicidade por usuário/data. `house_records` guarda yoga, lembretes, ideias, notícias, tarefas TikTok, tarefas profissionais e experimentos. `briefings` foi reutilizada, com categorias, fontes e confirmação explícita de leitura. Abrir registra `opened_at`; ler registra `read_at`; concluir uma tarefa registra `completed_at`, independentemente. Conteúdo manual não ganha data de geração por IA.
 
-- Supabase Auth com email/senha, cadastro, recuperação e logout.
-- Visão geral da casa; selecionar um cômodo oferece expansão opcional; botão para voltar.
-- Pauli caminha por toque no chão; Gepetinho passeia automaticamente.
-- Diário com registro diário idempotente pela data local, cuidados, notas e contadores manuais.
-- Estante física com amostras, upload privado de imagens, meta padrão de seis vídeos, registros de vídeos, ganchos e resultados acumulados.
-- Sala e observatório com interações simples. Nenhum gato nesta versão.
+As migrations em `supabase/migrations` reproduzem as versões aplicadas no projeto. O teste transacional em `supabase/tests` cria usuários temporários, verifica CRUD/isolamento e reverte tudo. Novas tabelas têm RLS por auth.uid(), sem acesso anon. A proteção opcional do Auth contra senhas vazadas permanece na configuração existente; não foi habilitado nenhum plano pago.
 
-## Dados e segurança
+## Conteúdo e integrações
+- Yoga: escolha manualmente título, URL, duração e data. O vídeo abre na fonte; a conclusão usa daily_checkins.yoga_done. A estrutura aceita futuros produtores automáticos de conteúdo.
+- Briefing: inserir/editar manualmente no computador. Fontes são links; abrir não confirma leitura. Editar invalida a confirmação anterior. Histórico acessível pela biblioteca.
+- Jornal: notícias manuais com data, imagem opcional, fonte e link. Não há manchetes inventadas nem busca automática nesta versão.
+- Daily Remembers: páginas pessoais com abertura, leitura e conclusão explícitas. Sem integração automática com conversas do ChatGPT nesta fase.
+- Rádio: ligar/desligar e volume persistem visualmente. Não reproduz áudio por enquanto. A integração Spotify exige um aplicativo OAuth e backend/proxy apropriado no futuro; nenhum segredo foi incluído.
+- Clima: Open-Meteo público, coordenadas fixas de Birigui (-21.2886,-50.3400), atualização a cada 15 minutos. Dia/noite, nuvens, chuva e tempestade no mapa. Falhas usam horário America/Sao_Paulo e atmosfera normal. Sem geolocalização do dispositivo. API gratuita para uso pessoal não comercial, sem chave; dados com atribuição Open-Meteo. Não há assinatura nem fallback pago.
+- IA: `agents.ts` define interface independente de provider; provider desativado. Não há requisições OpenAI/Grok ou vínculo técnico com assinatura ChatGPT.
 
-Somente a chave publishable é usada no cliente. As tabelas e buckets existentes mantêm RLS por `auth.uid()`. Fotos são salvas em `product-images/<user_id>/...`; URLs assinadas expiram em uma hora e são renovadas enquanto a aplicação permanece aberta. Não há service-role no código.
+## Segurança e limites
+Somente publishable key no frontend. Fotos existentes continuam no bucket privado product-images com URLs assinadas. Nenhuma service-role, segredo ou nova dependência foi adicionada. Conteúdos pessoais são isolados por usuário. Links aceitam somente HTTP(S), sem HTML executável.
 
-O Supabase Auth deve permitir o endereço público em URL Configuration para emails de confirmação e recuperação. As contagens manuais do diário são independentes dos vídeos associados às amostras. Resultados são snapshots manuais acumulados, e não somas dos snapshots. O progresso conta vídeos com `posted_at`.
-
-## Limites atuais
-
-Arte 2D com objetos interativos e movimentação simples por pontos de passagem. Expansão aproxima o ambiente e revela ações. Conversas/autonomia de IA, integração automática de métricas, novos cômodos e pets são etapas futuras. Os dados da conta começam vazios.
-
-A arte do chalé foi produzida a partir da referência visual fornecida pela proprietária do projeto.
+As novas alas usam ilustração vetorial leve e os cômodos originais preservam a arte do protótipo. A movimentação usa pontos de passagem, não física completa ou detecção de colisão por pixel. Métricas, notícias, briefings e tarefas ainda são manuais; calendário, pomodoro, integrações automáticas e agentes autônomos são extensões futuras. Nenhum gato foi adicionado.
