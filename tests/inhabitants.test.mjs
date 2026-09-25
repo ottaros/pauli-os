@@ -58,3 +58,10 @@ test("external links reject scripts and weather maps rain/storm", () => {
   assert.equal(weatherKind(3), "cloud");
   assert.equal(weatherKind(0), "clear");
 });
+
+test('Claudinho reuses NPC privacy rules and cannot approach the bedroom',()=>{
+ assert.equal(canEnter('claudinho','pauli'),false);
+ assert.equal(approach('claudinho',{room:'pauli',id:'bed'}),null);
+ assert.deepEqual(worldPath('claudinho',{x:49,y:87},{x:35,y:36},'pauli'),[]);
+ for(const room of commonRooms)assert.equal(canEnter('claudinho',room),true);
+});
