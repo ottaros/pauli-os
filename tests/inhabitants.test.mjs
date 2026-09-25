@@ -59,9 +59,26 @@ test("external links reject scripts and weather maps rain/storm", () => {
   assert.equal(weatherKind(0), "clear");
 });
 
-test('Claudinho reuses NPC privacy rules and cannot approach the bedroom',()=>{
- assert.equal(canEnter('claudinho','pauli'),false);
- assert.equal(approach('claudinho',{room:'pauli',id:'bed'}),null);
- assert.deepEqual(worldPath('claudinho',{x:49,y:87},{x:35,y:36},'pauli'),[]);
- for(const room of commonRooms)assert.equal(canEnter('claudinho',room),true);
+test("Claudinho reuses NPC privacy rules and cannot approach the bedroom", () => {
+  assert.equal(canEnter("claudinho", "pauli"), false);
+  assert.equal(approach("claudinho", { room: "pauli", id: "bed" }), null);
+  assert.deepEqual(
+    worldPath("claudinho", { x: 49, y: 87 }, { x: 35, y: 36 }, "pauli"),
+    [],
+  );
+  for (const room of commonRooms)
+    assert.equal(canEnter("claudinho", room), true);
+});
+
+test("Moss stays in the kitchen and Digo alone has cat access to the cafe", () => {
+  assert.equal(canEnter("moss", "kitchen"), true);
+  assert.equal(approach("moss", { room: "pauli" }), null);
+  assert.deepEqual(
+    worldPath("moss", { x: 23, y: 87 }, { x: 35, y: 36 }, "pauli"),
+    [],
+  );
+  for (const room of [...commonRooms, "pauli"])
+    assert.equal(canEnter("digo", room, "cat"), true);
+  assert.equal(canEnter("other-cat", "cafe", "cat"), false);
+  assert.equal(canEnter("gpt", "pauli"), false);
 });
