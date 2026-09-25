@@ -90,6 +90,8 @@ type Resident = {
   pose: Pose;
   target: string | null;
   coffee: boolean;
+  activity?: string;
+  hidden?: boolean;
   mapX?: number;
   mapY?: number;
 };
@@ -324,6 +326,19 @@ export default function World({
     room: "library",
     x: 60,
   });
+  const [moss, setMoss] = useState<Resident>({
+    ...initial,
+    room: "kitchen",
+    x: 82,
+    y: 76,
+    activity: "fridge",
+  });
+  const [digo, setDigo] = useState<Resident>({ ...initial, x: 76 });
+  const [digoMessage, setDigoMessage] = useState("");
+  const mossLatest = useRef(moss);
+  mossLatest.current = moss;
+  const digoLatest = useRef(digo);
+  digoLatest.current = digo;
   const [weather, setWeather] = useState({
     kind: "clear",
     night: false,
@@ -408,20 +423,95 @@ export default function World({
         interval: 15000,
       },
     ];
+    residents.push(
+      {
+        actor: "moss",
+        latest: mossLatest,
+        set: setMoss,
+        interacts: false,
+        interval: 17000,
+      },
+      {
+        actor: "digo",
+        latest: digoLatest,
+        set: setDigo,
+        interacts: false,
+        interval: 13000,
+      },
+    );
     const cleanups = residents.map((resident) => {
       let index = 0;
       const npcTimers: ReturnType<typeof setTimeout>[] = [];
       const id = setInterval(() => {
+        npcTimers.splice(0).forEach(clearTimeout);
         const stop =
           stops[
             resident.interacts
               ? index++ % stops.length
               : Math.floor(Math.random() * stops.length)
           ];
-        const obj = resident.interacts
+        let obj = resident.interacts
           ? stop
           : { ...stop, id: "walk", x: 60, y: 85, pose: "idle" as Pose };
-        if (!canEnter(resident.actor, obj.room)) return;
+        if (resident.actor === "moss") {
+          const spots = [
+            { id: "fridge", x: 82, y: 76 },
+            { id: "counter", x: 35, y: 69 },
+            { id: "spoon", x: 58, y: 84 },
+          ];
+          obj = {
+            ...obj,
+            ...spots[Math.floor(Math.random() * spots.length)],
+            room: "kitchen",
+            pose: "idle",
+          };
+        }
+        if (resident.actor === "digo") {
+          setDigoMessage("");
+          const roll = Math.random();
+          if (!resident.latest.current.hidden && roll < 0.12) {
+            resident.set((p) => ({
+              ...p,
+              pose: "walking",
+              x: 94,
+              y: 90,
+              mapX: 96,
+              mapY: 96,
+            }));
+            npcTimers.push(
+              setTimeout(
+                () =>
+                  resident.set((p) => ({
+                    ...p,
+                    hidden: true,
+                    pose: "idle",
+                    mapX: undefined,
+                    mapY: undefined,
+                  })),
+                1800,
+              ),
+            );
+            return;
+          }
+          const follow = roll < 0.7;
+          const owner = latest.current;
+          obj = {
+            ...obj,
+            id: follow ? "cuddle" : "walk",
+            room: follow ? owner.room : obj.room,
+            x: follow ? Math.max(10, Math.min(90, owner.x + 10)) : 60,
+            y: follow ? Math.max(72, Math.min(90, owner.y)) : 85,
+            pose: "idle",
+          };
+        }
+        if (
+          !canEnter(
+            resident.actor,
+            obj.room,
+            resident.actor === "digo" ? "cat" : "resident",
+          )
+        )
+          return;
         const from = resident.latest.current,
           r = rooms[from.room],
           dest = rooms[obj.room];
@@ -429,13 +519,25 @@ export default function World({
           x: dest.x + (obj.x - 50) * 0.28,
           y: dest.floor + (obj.y - 80) * 0.17,
         };
-        const path = worldPath(
-          resident.actor,
-          { x: r.x + (from.x - 50) * 0.28, y: r.floor + (from.y - 80) * 0.17 },
-          target,
-          obj.room,
-        );
-        resident.set((p) => ({ ...p, pose: "walking" }));
+        const path =
+          (resident.actor === "moss" || resident.actor === "digo") &&
+          from.room === obj.room
+            ? [target]
+            : worldPath(
+                resident.actor,
+                {
+                  x: r.x + (from.x - 50) * 0.28,
+                  y: r.floor + (from.y - 80) * 0.17,
+                },
+                target,
+                obj.room,
+              );
+        resident.set((p) => ({
+          ...p,
+          hidden: false,
+          activity: obj.id,
+          pose: "walking",
+        }));
         path.forEach((point: { x: number; y: number }, i: number) =>
           npcTimers.push(
             setTimeout(
@@ -521,6 +623,7 @@ export default function World({
     npc = false,
     name = npc ? "Gepetinho" : "Pauli",
   ) {
+    if (p.hidden) return null;
     if (expanded && p.room !== expanded) return null;
     if (!expanded && p.room === "cafe") return null;
     const r = rooms[p.room];
@@ -536,11 +639,51 @@ export default function World({
         aria-label={`${name} · ${p.pose} · ${r.name}`}
       >
         <Avatar
+          moss={name === "Moss"}
+          digo={name === "Digo"}
+          spoon={p.activity === "spoon"}
           gpt={npc}
           claudinho={name === "Claudinho"}
           pose={p.pose}
           back={p.room === "studio" && p.pose === "sitting"}
         />
+        {name === "Digo" && p.pose === "idle" && p.room === pauli.room && (
+          <button
+            className="digo-pet"
+            aria-label="Fazer carinho no Digo"
+            onClick={(e) => {
+              e.stopPropagation();
+              setDigoMessage("♡");
+              if (Math.random() < 0.4) {
+                setDigoMessage("Miau ♡");
+                const audio = new AudioContext();
+                const voice = audio.createOscillator(),
+                  volume = audio.createGain();
+                voice.connect(volume);
+                volume.connect(audio.destination);
+                voice.frequency.setValueAtTime(660, audio.currentTime);
+                voice.frequency.exponentialRampToValueAtTime(
+                  420,
+                  audio.currentTime + 0.28,
+                );
+                volume.gain.setValueAtTime(0.0001, audio.currentTime);
+                volume.gain.exponentialRampToValueAtTime(
+                  0.025,
+                  audio.currentTime + 0.07,
+                );
+                volume.gain.exponentialRampToValueAtTime(
+                  0.0001,
+                  audio.currentTime + 0.38,
+                );
+                voice.start();
+                voice.stop(audio.currentTime + 0.4);
+                voice.onended = () => void audio.close();
+              }
+            }}
+          >
+            {digoMessage || "Carinho? ♡"}
+          </button>
+        )}
         {p.coffee && <span className="held-cup">☕</span>}
         <span className="resident-name">{name}</span>
         {p.pose === "using" && p.room === "kitchen" && p.target === null && (
@@ -739,6 +882,8 @@ export default function World({
           {renderResident(pauli)}
           {renderResident(gpt, true)}
           {renderResident(claudinho, true, "Claudinho")}
+          {renderResident(moss, true, "Moss")}
+          {renderResident(digo, true, "Digo")}
         </div>
         <div className="habitat-caption">
           {expanded

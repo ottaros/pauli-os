@@ -87,7 +87,6 @@ function Field({
   );
 }
 function Login() {
-  const [mode, setMode] = useState<"login" | "signup" | "reset">("login");
   const [busy, setBusy] = useState(false);
   const [message, setMessage] = useState("");
   async function submit(e: FormEvent<HTMLFormElement>) {
@@ -98,25 +97,11 @@ function Login() {
     try {
       const email = String(f.get("email"));
       const password = String(f.get("password"));
-      const { error } =
-        mode === "login"
-          ? await supabase.auth.signInWithPassword({ email, password })
-          : mode === "signup"
-            ? await supabase.auth.signUp({
-                email,
-                password,
-                options: { emailRedirectTo: location.origin },
-              })
-            : await supabase.auth.resetPasswordForEmail(email, {
-                redirectTo: location.origin,
-              });
+      const { error } = await supabase.auth.signInWithPassword({
+        email: email.trim(),
+        password,
+      });
       if (error) throw error;
-      if (mode === "signup")
-        setMessage("Confira seu email para confirmar a entrada no chalé.");
-      if (mode === "reset")
-        setMessage(
-          "Se este email estiver cadastrado, você receberá um link para redefinir a senha.",
-        );
     } catch (e) {
       setMessage(failure(e));
     } finally {
@@ -124,7 +109,7 @@ function Login() {
     }
   }
   return (
-    <main className="entrance">
+    <main className="entrance private-entrance">
       <div className="entrance-art" />
       <header className="brand">
         <svg className="pauli-emblem" viewBox="0 0 48 48" aria-hidden="true">
@@ -148,92 +133,29 @@ function Login() {
         </svg>
         <div>Pauli OS</div>
       </header>
-      <section className="welcome">
-        <span className="eyebrow">NAS MONTANHAS, DO SEU JEITO</span>
-        <h1>
-          Uma vida bonita
-          <br />
-          começa em casa.
-        </h1>
-        <p>
-          Um lugar para cuidar de você, criar coisas
-          <br className="desktop" /> e ver seus pequenos passos florescerem.
-        </p>
+      <section className="welcome" aria-label="Login">
         <form onSubmit={submit}>
-          <h2>
-            {mode === "login"
-              ? "Seu chalé está esperando."
-              : mode === "signup"
-                ? "Pegue a chave do seu chalé."
-                : "Vamos recuperar sua chave."}
-          </h2>
           <label>
             Email
+            <input name="email" type="email" autoComplete="username" required />
+          </label>
+          <label>
+            Password
             <input
-              name="email"
-              type="email"
-              autoComplete="email"
-              placeholder="seu@email.com"
+              name="password"
+              type="password"
+              autoComplete="current-password"
               required
             />
           </label>
-          {mode !== "reset" && (
-            <label>
-              Senha
-              <input
-                name="password"
-                type="password"
-                minLength={8}
-                autoComplete={
-                  mode === "login" ? "current-password" : "new-password"
-                }
-                placeholder="Sua chave de entrada"
-                required
-              />
-            </label>
-          )}
           <button className="primary" disabled={busy}>
-            {busy
-              ? "Abrindo a porta…"
-              : mode === "login"
-                ? "Entrar no chalé →"
-                : mode === "signup"
-                  ? "Criar minha conta"
-                  : "Enviar link de recuperação"}
+            {busy ? "Opening…" : "Enter Home"}
           </button>
           <p role="status" className="form-message">
             {message}
           </p>
-          <div className="login-links">
-            <button
-              type="button"
-              onClick={() => {
-                setMode(mode === "signup" ? "login" : "signup");
-                setMessage("");
-              }}
-            >
-              {mode === "signup"
-                ? "Já tenho uma conta"
-                : "Primeira visita? Criar conta"}
-            </button>
-            <button
-              type="button"
-              onClick={() => {
-                setMode(mode === "reset" ? "login" : "reset");
-                setMessage("");
-              }}
-            >
-              {mode === "reset" ? "Voltar ao login" : "Esqueci a senha"}
-            </button>
-          </div>
         </form>
-        <small className="welcome-note">
-          ✦ Rotina, ideias e uma vida com mais significado.
-        </small>
       </section>
-      <span className="entrance-foot">
-        Seu pequeno mundo. Infinitas possibilidades.
-      </span>
     </main>
   );
 }

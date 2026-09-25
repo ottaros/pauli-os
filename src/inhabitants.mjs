@@ -8,8 +8,14 @@ export const commonRooms = [
   "basement",
   "cafe",
 ];
-export function canEnter(actor, room) {
-  return actor === "pauli" || commonRooms.includes(room);
+export function canEnter(actor, room, kind = "resident") {
+  if (kind === "cat" && room === "cafe" && actor !== "digo") return false;
+  if (actor === "moss") return room === "kitchen";
+  return (
+    actor === "pauli" ||
+    (actor === "digo" && room === "pauli") ||
+    commonRooms.includes(room)
+  );
 }
 export function enterRoom(actor, room, previous) {
   return canEnter(actor, room) ? room : previous;

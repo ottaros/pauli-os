@@ -1,14 +1,83 @@
 export default function Avatar({
+  moss = false,
+  digo = false,
+  spoon = false,
   gpt = false,
   claudinho = false,
   pose = "idle",
   back = false,
 }: {
+  moss?: boolean;
+  digo?: boolean;
+  spoon?: boolean;
   gpt?: boolean;
   claudinho?: boolean;
   pose?: string;
   back?: boolean;
 }) {
+  if (moss)
+    return (
+      <svg viewBox="0 0 60 85" className="avatar-art" aria-hidden="true">
+        <ellipse cx="30" cy="78" rx="19" ry="4" fill="#24332c" opacity=".25" />
+        <path
+          d="M14 66Q3 47 16 30L12 17 27 26Q48 19 49 45L47 69Q38 79 31 71 21 81 14 66"
+          fill="#849777"
+          stroke="#455b48"
+          strokeWidth="2"
+        />
+        <path d="M22 27q-3-14 11-16-1 10-11 16" fill="#b5bd88" />
+        <ellipse cx="22" cy="43" rx="6" ry="7" fill="#f3e9c9" />
+        <ellipse cx="39" cy="41" rx="5" ry="6" fill="#f3e9c9" />
+        <circle cx="24" cy="44" r="2" fill="#28372c" />
+        <circle cx="40" cy="42" r="2" fill="#28372c" />
+        <path d="M27 54q5 4 8-1" fill="none" stroke="#455b48" strokeWidth="2" />
+        {spoon && (
+          <g stroke="#c6a77c" strokeWidth="3">
+            <path d="M47 69V44" />
+            <ellipse cx="47" cy="39" rx="5" ry="7" fill="#e4ceb0" />
+          </g>
+        )}
+      </svg>
+    );
+  if (digo)
+    return (
+      <svg viewBox="0 0 60 85" className="avatar-art" aria-hidden="true">
+        <ellipse cx="30" cy="78" rx="20" ry="4" fill="#d7ebf2" opacity=".2" />
+        <g opacity=".83" stroke="#e9e7db" strokeWidth="1.5">
+          <path
+            d="M44 63q20 0 10-22"
+            fill="none"
+            stroke="#fff7de"
+            strokeWidth="7"
+            strokeLinecap="round"
+          />
+          <path
+            d="M15 71Q10 47 22 44q24-10 24 22l-4 10-7-4-7 5-7-4z"
+            fill="#fffaf0"
+          />
+          <path
+            d="M32 46q11 1 11 17l-7 4q3-12-4-21"
+            fill="#efe2af"
+            stroke="none"
+          />
+          <path
+            d="M12 43 13 22 25 31q6-2 11 0l12-9-1 24q-18 17-35-3"
+            fill="#fff9ec"
+          />
+          <path d="m16 27 7 7-7 3m28-10-7 7 7 3" fill="#e8b68c" stroke="none" />
+        </g>
+        <ellipse cx="23" cy="42" rx="3" ry="4" fill="#7ab7d3" />
+        <ellipse cx="38" cy="42" rx="3" ry="4" fill="#7ab7d3" />
+        <circle cx="24" cy="41" r="1" fill="white" />
+        <circle cx="39" cy="41" r="1" fill="white" />
+        <path
+          d="m28 48 3 2 3-2m-3 2v3"
+          fill="none"
+          stroke="#d6a8a4"
+          strokeLinecap="round"
+        />
+      </svg>
+    );
   return (
     <svg viewBox="0 0 60 85" className="avatar-art" aria-hidden="true">
       <ellipse cx="30" cy="79" rx="18" ry="4" fill="#201e25" opacity=".3" />
