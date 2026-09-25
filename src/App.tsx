@@ -415,20 +415,18 @@ function Home({
           .upload(path, file, { contentType: file.type });
         if (error) throw error;
       }
-      const { error } = await supabase
-        .from("products")
-        .insert({
-          user_id: uid,
-          name: String(f.get("name")).trim(),
-          brand: f.get("brand") || null,
-          platform: f.get("platform"),
-          acquisition_type: f.get("acquisition_type"),
-          received_at: f.get("received_at") || null,
-          deadline_at: f.get("deadline_at") || null,
-          target_videos: Number(f.get("target_videos")),
-          notes: f.get("notes") || null,
-          image_url: path,
-        });
+      const { error } = await supabase.from("products").insert({
+        user_id: uid,
+        name: String(f.get("name")).trim(),
+        brand: f.get("brand") || null,
+        platform: f.get("platform"),
+        acquisition_type: f.get("acquisition_type"),
+        received_at: f.get("received_at") || null,
+        deadline_at: f.get("deadline_at") || null,
+        target_videos: Number(f.get("target_videos")),
+        notes: f.get("notes") || null,
+        image_url: path,
+      });
       if (error) {
         if (path) await supabase.storage.from("product-images").remove([path]);
         throw error;
@@ -573,6 +571,16 @@ function Home({
           }
           onClose={() => setPanel("")}
         >
+          {error && (
+            <p className="inline-error" role="alert">
+              {error}
+            </p>
+          )}
+          {toast && (
+            <p className="inline-success" role="status">
+              {toast}
+            </p>
+          )}
           {["routine", "journal"].includes(panel) && (
             <>
               {checkin ? (
@@ -886,20 +894,18 @@ function Home({
                 const f = new FormData(e.currentTarget);
                 void action(async () => {
                   const hook = hooks.find((h) => h.id === f.get("hook_id"));
-                  const { error } = await supabase
-                    .from("videos")
-                    .insert({
-                      user_id: uid,
-                      product_id: currentProduct.id,
-                      platform: f.get("platform"),
-                      posted_at: new Date(
-                        String(f.get("posted_at")),
-                      ).toISOString(),
-                      url: f.get("url") || null,
-                      caption: f.get("caption") || null,
-                      hook_id: hook?.id || null,
-                      hook_snapshot: hook?.hook_text || null,
-                    });
+                  const { error } = await supabase.from("videos").insert({
+                    user_id: uid,
+                    product_id: currentProduct.id,
+                    platform: f.get("platform"),
+                    posted_at: new Date(
+                      String(f.get("posted_at")),
+                    ).toISOString(),
+                    url: f.get("url") || null,
+                    caption: f.get("caption") || null,
+                    hook_id: hook?.id || null,
+                    hook_snapshot: hook?.hook_text || null,
+                  });
                   if (error) throw error;
                   setPanel("product");
                 }, "Mais um vídeo no mundo!");
@@ -952,14 +958,12 @@ function Home({
                 e.preventDefault();
                 const f = new FormData(e.currentTarget);
                 void action(async () => {
-                  const { error } = await supabase
-                    .from("hooks")
-                    .insert({
-                      user_id: uid,
-                      product_id: currentProduct.id,
-                      hook_text: f.get("hook_text"),
-                      status: f.get("status"),
-                    });
+                  const { error } = await supabase.from("hooks").insert({
+                    user_id: uid,
+                    product_id: currentProduct.id,
+                    hook_text: f.get("hook_text"),
+                    status: f.get("status"),
+                  });
                   if (error) throw error;
                   setPanel("product");
                 });

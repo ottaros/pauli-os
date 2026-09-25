@@ -1114,3 +1114,45 @@ a {
     min-height: 32px;
   }
 }
+.expanded .room-sign:not(.active) {
+  visibility: hidden;
+  pointer-events: none;
+}
+.expanded .room-sign {
+  min-height: 0;
+}
+@media (max-width: 700px) {
+  .expanded {
+    aspect-ratio: 1.1;
+  }
+  .expanded .scene {
+    top: 0 !important;
+    transform: scale(2.7);
+  }
+  .expanded.pauli .scene {
+    transform-origin: 18% 25%;
+  }
+  .expanded.studio .scene {
+    transform-origin: 82% 25%;
+  }
+  .expanded.living .scene {
+    transform-origin: 18% 80%;
+  }
+  .expanded.gpt .scene {
+    transform-origin: 82% 80%;
+  }
+}
+.inline-error {
+  padding: 12px;
+  background: #f6dfd7;
+  color: #8b4635;
+  border-radius: 8px;
+  font-size: 13px;
+}
+.inline-success {
+  padding: 12px;
+  background: #e5ebd7;
+  color: #486143;
+  border-radius: 8px;
+  font-size: 13px;
+}
