@@ -104,6 +104,15 @@ type ObjectSpec = {
 };
 export const objects: ObjectSpec[] = [
   {
+    id: "fridge",
+    room: "kitchen",
+    label: "Geladeira · alimentação",
+    x: 88,
+    y: 70,
+    pose: "using",
+    action: "fridge",
+  },
+  {
     id: "bed",
     room: "pauli",
     label: "Deitar na cama",
@@ -310,6 +319,11 @@ export default function World({
 }) {
   const [pauli, setPauli] = useState<Resident>(initial),
     [gpt, setGpt] = useState<Resident>({ ...initial, room: "gpt" });
+  const [claudinho, setClaudinho] = useState<Resident>({
+    ...initial,
+    room: "library",
+    x: 60,
+  });
   const [weather, setWeather] = useState({
     kind: "clear",
     night: false,
@@ -320,6 +334,8 @@ export default function World({
   latest.current = pauli;
   const npcLatest = useRef(gpt);
   npcLatest.current = gpt;
+  const claudinhoLatest = useRef(claudinho);
+  claudinhoLatest.current = claudinho;
   const schedule = (fn: () => void, ms: number) => {
     timers.current.push(setTimeout(fn, ms));
   };
@@ -376,63 +392,95 @@ export default function World({
       objects.find((o) => o.id === "work")!,
       objects.find((o) => o.id === "armchair")!,
     ];
-    let index = 0;
-    const npcTimers: ReturnType<typeof setTimeout>[] = [];
-    const id = setInterval(() => {
-      const obj = stops[index++ % stops.length];
-      if (!canEnter("gpt", obj.room)) return;
-      const from = npcLatest.current,
-        r = rooms[from.room],
-        dest = rooms[obj.room];
-      const target = {
-        x: dest.x + (obj.x - 50) * 0.28,
-        y: dest.floor + (obj.y - 80) * 0.17,
-      };
-      const path = worldPath(
-        "gpt",
-        { x: r.x + (from.x - 50) * 0.28, y: r.floor + (from.y - 80) * 0.17 },
-        target,
-        obj.room,
-      );
-      setGpt((p) => ({ ...p, pose: "walking" }));
-      path.forEach((point: { x: number; y: number }, i: number) =>
-        npcTimers.push(
-          setTimeout(
-            () => setGpt((p) => ({ ...p, mapX: point.x, mapY: point.y })),
-            i * 1600,
-          ),
-        ),
-      );
-      npcTimers.push(
-        setTimeout(() => {
-          setGpt((p) => ({
-            ...p,
-            ...approach("gpt", obj),
-            pose: "walking",
-            mapX: undefined,
-            mapY: undefined,
-          }));
+    const residents = [
+      {
+        actor: "gpt",
+        latest: npcLatest,
+        set: setGpt,
+        interacts: true,
+        interval: 12000,
+      },
+      {
+        actor: "claudinho",
+        latest: claudinhoLatest,
+        set: setClaudinho,
+        interacts: false,
+        interval: 15000,
+      },
+    ];
+    const cleanups = residents.map((resident) => {
+      let index = 0;
+      const npcTimers: ReturnType<typeof setTimeout>[] = [];
+      const id = setInterval(() => {
+        const stop =
+          stops[
+            resident.interacts
+              ? index++ % stops.length
+              : Math.floor(Math.random() * stops.length)
+          ];
+        const obj = resident.interacts
+          ? stop
+          : { ...stop, id: "walk", x: 60, y: 85, pose: "idle" as Pose };
+        if (!canEnter(resident.actor, obj.room)) return;
+        const from = resident.latest.current,
+          r = rooms[from.room],
+          dest = rooms[obj.room];
+        const target = {
+          x: dest.x + (obj.x - 50) * 0.28,
+          y: dest.floor + (obj.y - 80) * 0.17,
+        };
+        const path = worldPath(
+          resident.actor,
+          { x: r.x + (from.x - 50) * 0.28, y: r.floor + (from.y - 80) * 0.17 },
+          target,
+          obj.room,
+        );
+        resident.set((p) => ({ ...p, pose: "walking" }));
+        path.forEach((point: { x: number; y: number }, i: number) =>
           npcTimers.push(
             setTimeout(
               () =>
-                setGpt((p) => ({
-                  ...p,
-                  ...arrive(p, obj),
-                  pose:
-                    obj.pose === "sitting" && p.coffee ? "drinking" : obj.pose,
-                  coffee:
-                    obj.id === "coffee" || (obj.id !== "armchair" && p.coffee),
-                })),
-              1600,
+                resident.set((p) => ({ ...p, mapX: point.x, mapY: point.y })),
+              i * 1600,
             ),
-          );
-        }, path.length * 1600),
-      );
-    }, 12000);
-    return () => {
-      clearInterval(id);
-      npcTimers.forEach(clearTimeout);
-    };
+          ),
+        );
+        npcTimers.push(
+          setTimeout(() => {
+            resident.set((p) => ({
+              ...p,
+              ...approach(resident.actor, obj),
+              pose: "walking",
+              mapX: undefined,
+              mapY: undefined,
+            }));
+            npcTimers.push(
+              setTimeout(
+                () =>
+                  resident.set((p) => ({
+                    ...p,
+                    ...arrive(p, obj),
+                    pose:
+                      resident.interacts && obj.pose === "sitting" && p.coffee
+                        ? "drinking"
+                        : obj.pose,
+                    coffee:
+                      resident.interacts &&
+                      (obj.id === "coffee" ||
+                        (obj.id !== "armchair" && p.coffee)),
+                  })),
+                1600,
+              ),
+            );
+          }, path.length * 1600),
+        );
+      }, resident.interval);
+      return () => {
+        clearInterval(id);
+        npcTimers.forEach(clearTimeout);
+      };
+    });
+    return () => cleanups.forEach((cleanup) => cleanup());
   }, []);
   useEffect(() => {
     if (!expanded) return;
@@ -468,7 +516,11 @@ export default function World({
       } else if (obj.action) onAction(obj.action);
     }, 1500);
   }
-  function renderResident(p: Resident, npc = false) {
+  function renderResident(
+    p: Resident,
+    npc = false,
+    name = npc ? "Gepetinho" : "Pauli",
+  ) {
     if (expanded && p.room !== expanded) return null;
     if (!expanded && p.room === "cafe") return null;
     const r = rooms[p.room];
@@ -481,15 +533,16 @@ export default function World({
           left: (expanded ? p.x : (p.mapX ?? mainX)) + "%",
           top: (expanded ? p.y : (p.mapY ?? mainY)) + "%",
         }}
-        aria-label={`${npc ? "Gepetinho" : "Pauli"} · ${p.pose} · ${r.name}`}
+        aria-label={`${name} · ${p.pose} · ${r.name}`}
       >
         <Avatar
           gpt={npc}
+          claudinho={name === "Claudinho"}
           pose={p.pose}
           back={p.room === "studio" && p.pose === "sitting"}
         />
         {p.coffee && <span className="held-cup">☕</span>}
-        <span className="resident-name">{npc ? "Gepetinho" : "Pauli"}</span>
+        <span className="resident-name">{name}</span>
         {p.pose === "using" && p.room === "kitchen" && p.target === null && (
           <span className="steam">〰</span>
         )}
@@ -685,6 +738,7 @@ export default function World({
             ))}
           {renderResident(pauli)}
           {renderResident(gpt, true)}
+          {renderResident(claudinho, true, "Claudinho")}
         </div>
         <div className="habitat-caption">
           {expanded

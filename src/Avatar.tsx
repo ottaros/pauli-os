@@ -1,9 +1,11 @@
 export default function Avatar({
   gpt = false,
+  claudinho = false,
   pose = "idle",
   back = false,
 }: {
   gpt?: boolean;
+  claudinho?: boolean;
   pose?: string;
   back?: boolean;
 }) {
@@ -22,13 +24,13 @@ export default function Avatar({
       />
       <path
         d="M16 54q14-16 28 0l2 16H14z"
-        fill={gpt ? "#284d50" : "#edd7bd"}
+        fill={claudinho ? "#bf795b" : gpt ? "#284d50" : "#edd7bd"}
         stroke="#523d36"
         strokeWidth="2"
       />
       <path
         d="M11 46V29Q9 4 30 5q25 0 21 31v23L40 56 18 58z"
-        fill={gpt ? "#2a292d" : "#49312c"}
+        fill={claudinho ? "#835443" : gpt ? "#2a292d" : "#49312c"}
       />
       <ellipse
         cx="30"
@@ -39,8 +41,15 @@ export default function Avatar({
       />
       <path
         d="M13 30Q10 6 30 8q23-2 19 24L36 18l-5 9-8-6z"
-        fill={gpt ? "#2a292d" : "#49312c"}
+        fill={claudinho ? "#835443" : gpt ? "#2a292d" : "#49312c"}
       />
+      {claudinho && !back && (
+        <g fill="none" stroke="#704e36" strokeWidth="1.5">
+          <circle cx="23" cy="35" r="6" />
+          <circle cx="38" cy="35" r="6" />
+          <path d="M29 35h3" />
+        </g>
+      )}
       {!back && (
         <g className="avatar-face">
           <ellipse

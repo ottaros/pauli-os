@@ -34,6 +34,7 @@ type Brief = {
   read_at: string | null;
 };
 export const contentPanels = [
+  "fridge",
   "journal",
   "yoga",
   "remember",
@@ -49,6 +50,7 @@ export const contentPanels = [
   "task",
 ];
 export const contentTitles: Record<string, string> = {
+  fridge: "Geladeira · meu dia",
   journal: "Entre você e estas páginas",
   yoga: "Um tempo no seu tapete",
   remember: "Daily Remembers · pessoal",
@@ -100,17 +102,15 @@ export function useHouseState(uid: string) {
     if (!ready || saving) return;
     setSaving(true);
     setError("");
-    const { error } = await supabase
-      .from("house_state")
-      .upsert(
-        {
-          ...state,
-          user_id: uid,
-          ...patch,
-          updated_at: new Date().toISOString(),
-        },
-        { onConflict: "user_id" },
-      );
+    const { error } = await supabase.from("house_state").upsert(
+      {
+        ...state,
+        user_id: uid,
+        ...patch,
+        updated_at: new Date().toISOString(),
+      },
+      { onConflict: "user_id" },
+    );
     if (error) setError(failure(error));
     else setState((s) => ({ ...s, ...patch }));
     setSaving(false);
@@ -293,13 +293,7 @@ export default function HouseContent({
   }
   const editor = (
     <details className="content-editor">
-      <summary>
-        {panel === "yoga"
-          ? "Escolher vídeo do dia"
-          : panel === "news"
-            ? "Adicionar notícia manualmente"
-            : "Adicionar uma página"}
-      </summary>
+      <summary>Adicionar uma página</summary>
       <form onSubmit={newRecord}>
         <label>
           Título
@@ -310,40 +304,9 @@ export default function HouseContent({
           <input name="day" type="date" defaultValue={day} required />
         </label>
         <label>
-          {panel === "news" ? "Resumo" : "Texto / detalhes"}
+          Texto / detalhes
           <textarea name="content" rows={4} />
         </label>
-        {["yoga", "news"].includes(panel) && (
-          <>
-            <label>
-              Link para {panel === "yoga" ? "o vídeo" : "ler mais"}
-              <input name="url" type="url" required />
-            </label>
-            {panel === "yoga" ? (
-              <label>
-                Duração em minutos
-                <input
-                  name="duration_minutes"
-                  type="number"
-                  min="1"
-                  max="240"
-                  required
-                />
-              </label>
-            ) : (
-              <>
-                <label>
-                  Fonte
-                  <input name="category" required />
-                </label>
-                <label>
-                  Imagem (URL opcional)
-                  <input name="image_url" type="url" />
-                </label>
-              </>
-            )}
-          </>
-        )}
         <button className="primary" disabled={busy}>
           Salvar
         </button>
@@ -373,6 +336,9 @@ export default function HouseContent({
         <p>Preparando este cantinho…</p>
       ) : (
         <>
+          {panel === "fridge" && (
+            <QuickFood key={uid + day} uid={uid} day={day} />
+          )}
           {panel === "journal" && (
             <div className="paper-panel">
               <p>
@@ -455,14 +421,11 @@ export default function HouseContent({
                     rel="noreferrer"
                     onClick={() => void run(() => mark(items[0], "opened_at"))}
                   >
-                    Assistir ao vídeo ↗
+                    Assistir no YouTube
                   </a>
                 </>
               ) : (
-                <p>
-                  Escolha abaixo o vídeo que quer acompanhar hoje. Sua seleção
-                  ficará salva para este dia.
-                </p>
+                <p>O vídeo de hoje ainda não chegou 🌿</p>
               )}
               <label className="yoga-check">
                 <input
@@ -475,7 +438,6 @@ export default function HouseContent({
                 />{" "}
                 Yoga feito hoje
               </label>
-              {editor}
             </div>
           )}
           {panel === "computer" && (
@@ -572,89 +534,8 @@ export default function HouseContent({
                   </button>
                 </article>
               ) : (
-                <p>
-                  O briefing deste dia ainda não chegou. Você pode adicionar o
-                  conteúdo abaixo.
-                </p>
+                <p>O briefing deste dia ainda não chegou.</p>
               )}
-              <details className="content-editor">
-                <summary>
-                  {brief ? "Editar conteúdo" : "Inserir briefing manual"}
-                </summary>
-                <form
-                  key={brief?.id || date}
-                  onSubmit={(e) => {
-                    e.preventDefault();
-                    const f = new FormData(e.currentTarget);
-                    void run(async () => {
-                      const values = {
-                        user_id: uid,
-                        day: date,
-                        title: String(f.get("title")),
-                        content: String(f.get("content")),
-                        categories: String(f.get("categories") || "")
-                          .split(",")
-                          .map((s) => s.trim())
-                          .filter(Boolean),
-                        sources: String(f.get("sources") || "")
-                          .split("\n")
-                          .filter((s) => safeUrl(s)),
-                        updated_at: new Date().toISOString(),
-                        opened_at: brief?.opened_at || new Date().toISOString(),
-                        read_at: null,
-                      };
-                      const r = brief
-                        ? await supabase
-                            .from("briefings")
-                            .update(values)
-                            .eq("id", brief.id)
-                            .eq("user_id", uid)
-                        : await supabase.from("briefings").insert(values);
-                      if (r.error) throw r.error;
-                      if (date === day && checkin?.briefing_read)
-                        await updateCheck({ briefing_read: false });
-                    });
-                  }}
-                >
-                  <label>
-                    Título
-                    <input
-                      name="title"
-                      required
-                      defaultValue={brief?.title || ""}
-                    />
-                  </label>
-                  <label>
-                    Conteúdo
-                    <textarea
-                      name="content"
-                      required
-                      rows={8}
-                      defaultValue={brief?.content || ""}
-                    />
-                  </label>
-                  <label>
-                    Categorias separadas por vírgula
-                    <input
-                      name="categories"
-                      defaultValue={
-                        brief?.categories.join(", ") ||
-                        "TikTok, creators, marketing"
-                      }
-                    />
-                  </label>
-                  <label>
-                    Fontes (um link por linha)
-                    <textarea
-                      name="sources"
-                      defaultValue={brief?.sources.join("\n") || ""}
-                    />
-                  </label>
-                  <button className="primary" disabled={busy}>
-                    Guardar briefing
-                  </button>
-                </form>
-              </details>
             </>
           )}
           {panel === "radio" && (
@@ -709,7 +590,7 @@ export default function HouseContent({
             <>
               <div className="newspaper">
                 <small>
-                  EDIÇÃO MANUAL ·{" "}
+                  EDIÇÃO DO DIA ·{" "}
                   {new Date(day + "T12:00:00").toLocaleDateString("pt-BR")}
                 </small>
                 <h3>O Jornal do Chalé</h3>
@@ -754,13 +635,9 @@ export default function HouseContent({
                     );
                   })()
                 ) : (
-                  <p>
-                    A edição de hoje está em branco. Adicione notícias com suas
-                    fontes para começar a folhear.
-                  </p>
+                  <p>O jornal de hoje ainda não chegou.</p>
                 )}
               </div>
-              {editor}
             </>
           )}
           {[
@@ -949,6 +826,362 @@ export default function HouseContent({
             </div>
           )}
         </>
+      )}
+    </div>
+  );
+}
+
+const mealTypes = [
+  ["breakfast", "Café da manhã"],
+  ["lunch", "Almoço"],
+  ["afternoon_snack", "Lanche da tarde"],
+  ["dinner", "Jantar"],
+  ["craving", "Vontade do dia"],
+] as const;
+type MealDraft = {
+  id: string;
+  meal_type: string;
+  description: string;
+  eaten: boolean;
+  source: string;
+  notes: string | null;
+};
+function QuickFood({ uid, day }: { uid: string; day: string }) {
+  const [meals, setMeals] = useState<Record<string, MealDraft>>({});
+  const [dirty, setDirty] = useState<string[]>([]),
+    [waterDirty, setWaterDirty] = useState(false);
+  const [bottles, setBottles] = useState(0),
+    [bottleMl, setBottleMl] = useState(700);
+  const [regimen, setRegimen] = useState<{ id: string; name: string } | null>(
+      null,
+    ),
+    [taken, setTaken] = useState(false);
+  const [loading, setLoading] = useState(true),
+    [saving, setSaving] = useState(false),
+    [vitaminBusy, setVitaminBusy] = useState(false);
+  const [error, setError] = useState(""),
+    [notice, setNotice] = useState("");
+  const savingRef = useRef(false),
+    vitaminRef = useRef(false);
+  useEffect(() => {
+    let alive = true;
+    async function loadFood() {
+      setLoading(true);
+      setError("");
+      try {
+        const results = await Promise.all([
+          supabase
+            .from("meal_entries")
+            .select("id,meal_type,description,eaten,source,notes")
+            .eq("user_id", uid)
+            .eq("day", day)
+            .order("created_at", { ascending: false }),
+          supabase
+            .from("hydration_daily")
+            .select("bottles,bottle_ml")
+            .eq("user_id", uid)
+            .eq("day", day)
+            .maybeSingle(),
+          supabase
+            .from("supplement_regimens")
+            .select("id,name")
+            .eq("user_id", uid)
+            .eq("active", true)
+            .eq("frequency", "daily")
+            .eq("name", "A-Z Mulher")
+            .lte("started_on", day)
+            .order("created_at", { ascending: false })
+            .limit(1),
+        ]);
+        for (const r of results) if (r.error) throw r.error;
+        if (!alive) return;
+        const rows = results[0].data as MealDraft[];
+        setMeals(
+          Object.fromEntries(
+            mealTypes.map(([type]) => [
+              type,
+              rows.find((m) => m.meal_type === type) || {
+                id: crypto.randomUUID(),
+                meal_type: type,
+                description: "",
+                eaten: false,
+                source: "home",
+                notes: null,
+              },
+            ]),
+          ),
+        );
+        const water = results[1].data as {
+          bottles: number;
+          bottle_ml: number;
+        } | null;
+        setBottles(Number(water?.bottles || 0));
+        setBottleMl(water?.bottle_ml || 700);
+        const active =
+          (results[2].data as { id: string; name: string }[])[0] || null;
+        if (active) {
+          const r = await supabase
+            .from("supplement_checkins")
+            .select("taken")
+            .eq("user_id", uid)
+            .eq("regimen_id", active.id)
+            .eq("day", day)
+            .maybeSingle();
+          if (r.error) throw r.error;
+          if (alive) {
+            setTaken(r.data?.taken || false);
+            setRegimen(active);
+          }
+        }
+      } catch (e) {
+        if (alive) setError(failure(e));
+      } finally {
+        if (alive) setLoading(false);
+      }
+    }
+    void loadFood();
+    return () => {
+      alive = false;
+    };
+  }, [uid, day]);
+  function edit(type: string, patch: Partial<MealDraft>) {
+    setMeals((m) => ({ ...m, [type]: { ...m[type], ...patch } }));
+    setDirty((d) => (d.includes(type) ? d : [...d, type]));
+    setNotice("");
+  }
+  async function saveFood(e: FormEvent) {
+    e.preventDefault();
+    if (savingRef.current) return;
+    savingRef.current = true;
+    setSaving(true);
+    setError("");
+    setNotice("");
+    try {
+      // Stable primary IDs make retries idempotent without adding a database constraint.
+      for (const type of dirty) {
+        const r = await supabase
+          .from("meal_entries")
+          .upsert(
+            {
+              ...meals[type],
+              user_id: uid,
+              day,
+              updated_at: new Date().toISOString(),
+            },
+            { onConflict: "id" },
+          );
+        if (r.error) throw r.error;
+      }
+      if (waterDirty) {
+        const r = await supabase
+          .from("hydration_daily")
+          .upsert(
+            {
+              user_id: uid,
+              day,
+              bottle_ml: bottleMl,
+              bottles,
+              updated_at: new Date().toISOString(),
+            },
+            { onConflict: "user_id,day" },
+          );
+        if (r.error) throw r.error;
+      }
+      setDirty([]);
+      setWaterDirty(false);
+      setNotice("Dia salvo.");
+    } catch (e) {
+      setError(failure(e));
+    } finally {
+      savingRef.current = false;
+      setSaving(false);
+    }
+  }
+  async function saveVitamin(value: boolean) {
+    if (!regimen || vitaminRef.current) return;
+    vitaminRef.current = true;
+    setVitaminBusy(true);
+    setError("");
+    try {
+      const r = await supabase
+        .from("supplement_checkins")
+        .upsert(
+          {
+            user_id: uid,
+            regimen_id: regimen.id,
+            day,
+            taken: value,
+            taken_at: value ? new Date().toISOString() : null,
+            updated_at: new Date().toISOString(),
+          },
+          { onConflict: "regimen_id,day" },
+        );
+      if (r.error) throw r.error;
+      setTaken(value);
+      setNotice("Vitamina registrada.");
+    } catch (e) {
+      setError(failure(e));
+    } finally {
+      vitaminRef.current = false;
+      setVitaminBusy(false);
+    }
+  }
+  return (
+    <div className="quick-food">
+      {error && (
+        <p className="inline-error" role="alert">
+          {error}
+        </p>
+      )}
+      {notice && (
+        <p className="inline-success" role="status">
+          {notice}
+        </p>
+      )}
+      {loading ? (
+        <p>Carregando seu dia…</p>
+      ) : Object.keys(meals).length > 0 ? (
+        <>
+          <form onSubmit={saveFood}>
+            <fieldset disabled={saving} className="food-fields">
+              {mealTypes
+                .filter(([type]) => type !== "craving")
+                .map(([type, label]) => (
+                  <div className="meal-line" key={type}>
+                    <div className="meal-heading">
+                      <strong>{label}</strong>
+                      <label>
+                        <input
+                          type="checkbox"
+                          checked={meals[type].eaten}
+                          onChange={(e) =>
+                            edit(type, { eaten: e.target.checked })
+                          }
+                          aria-label={`${label}: fiz`}
+                        />{" "}
+                        Fiz
+                      </label>
+                      {type !== "breakfast" && (
+                        <label className="ifood">
+                          <input
+                            type="checkbox"
+                            checked={meals[type].source === "ifood"}
+                            onChange={(e) =>
+                              edit(type, {
+                                source: e.target.checked ? "ifood" : "home",
+                              })
+                            }
+                            aria-label={`${label}: iFood`}
+                          />{" "}
+                          iFood
+                        </label>
+                      )}
+                    </div>
+                    <input
+                      className="meal-description"
+                      aria-label={`${label}: o que comi?`}
+                      placeholder="o que comi? (opcional)"
+                      maxLength={500}
+                      value={meals[type].description}
+                      onChange={(e) =>
+                        edit(type, { description: e.target.value })
+                      }
+                    />
+                  </div>
+                ))}
+              <div className="water-line">
+                <strong>🥤 Água</strong>
+                <button
+                  type="button"
+                  className="secondary"
+                  aria-label="Menos uma garrafa"
+                  disabled={bottles <= 0}
+                  onClick={() => {
+                    setBottles((b) => Math.max(0, b - 1));
+                    setWaterDirty(true);
+                    setNotice("");
+                  }}
+                >
+                  −
+                </button>
+                <output aria-label="Garrafas de água">{bottles}</output>
+                <button
+                  type="button"
+                  className="secondary"
+                  aria-label="Mais uma garrafa"
+                  onClick={() => {
+                    setBottles((b) => b + 1);
+                    setWaterDirty(true);
+                    setNotice("");
+                  }}
+                >
+                  +
+                </button>
+                <small>
+                  {bottleMl} ml cada ·{" "}
+                  {((bottles * bottleMl) / 1000).toLocaleString("pt-BR")} L
+                </small>
+              </div>
+              <div className="meal-line">
+                <strong>Vontade do dia</strong>
+                <input
+                  aria-label="Vontade do dia"
+                  placeholder="Hoje fiquei com vontade de…"
+                  maxLength={500}
+                  value={meals.craving.description}
+                  onChange={(e) =>
+                    edit("craving", { description: e.target.value })
+                  }
+                />
+                <div className="craving-options">
+                  <label>
+                    <input
+                      type="radio"
+                      name="craving-eaten"
+                      checked={meals.craving.eaten}
+                      onChange={() => edit("craving", { eaten: true })}
+                    />{" "}
+                    Comi
+                  </label>
+                  <label>
+                    <input
+                      type="radio"
+                      name="craving-eaten"
+                      checked={!meals.craving.eaten}
+                      onChange={() => edit("craving", { eaten: false })}
+                    />{" "}
+                    Não comi
+                  </label>
+                </div>
+              </div>
+              <button
+                className="primary"
+                disabled={saving || (!dirty.length && !waterDirty)}
+              >
+                {saving ? "Salvando…" : "Salvar dia"}
+              </button>
+            </fieldset>
+          </form>
+          {regimen && (
+            <label className="vitamin-check">
+              <span>💊 Vitamina {regimen.name}</span>
+              <span>
+                <input
+                  type="checkbox"
+                  checked={taken}
+                  disabled={vitaminBusy}
+                  onChange={(e) => void saveVitamin(e.target.checked)}
+                />{" "}
+                Tomei hoje
+              </span>
+            </label>
+          )}
+        </>
+      ) : (
+        <p>
+          Não foi possível carregar os registros. Feche e abra a geladeira para
+          tentar novamente.
+        </p>
       )}
     </div>
   );
