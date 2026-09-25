@@ -127,10 +127,26 @@ function Login() {
     <main className="entrance">
       <div className="entrance-art" />
       <header className="brand">
-        <span>⌂</span>
-        <div>
-          Pauli OS<small>UM REFÚGIO PARA A SUA VIDA</small>
-        </div>
+        <svg className="pauli-emblem" viewBox="0 0 48 48" aria-hidden="true">
+          <path
+            d="M24 4 29 18 43 24 29 29 24 44 19 29 5 24 19 18Z"
+            fill="none"
+            stroke="currentColor"
+            strokeWidth="2"
+          />
+          <path
+            d="M24 15 27 21 33 24 27 27 24 33 21 27 15 24 21 21Z"
+            fill="currentColor"
+          />
+          <circle cx="39" cy="9" r="3" fill="currentColor" />
+          <path
+            d="M8 36q-2 7 5 7"
+            fill="none"
+            stroke="currentColor"
+            strokeWidth="2"
+          />
+        </svg>
+        <div>Pauli OS</div>
       </header>
       <section className="welcome">
         <span className="eyebrow">NAS MONTANHAS, DO SEU JEITO</span>
@@ -450,10 +466,26 @@ function Home({
     <main className="home">
       <header className="home-header">
         <div className="brand">
-          <span>⌂</span>
-          <div>
-            Pauli OS<small>SEU REFÚGIO NAS MONTANHAS</small>
-          </div>
+          <svg className="pauli-emblem" viewBox="0 0 48 48" aria-hidden="true">
+            <path
+              d="M24 4 29 18 43 24 29 29 24 44 19 29 5 24 19 18Z"
+              fill="none"
+              stroke="currentColor"
+              strokeWidth="2"
+            />
+            <path
+              d="M24 15 27 21 33 24 27 27 24 33 21 27 15 24 21 21Z"
+              fill="currentColor"
+            />
+            <circle cx="39" cy="9" r="3" fill="currentColor" />
+            <path
+              d="M8 36q-2 7 5 7"
+              fill="none"
+              stroke="currentColor"
+              strokeWidth="2"
+            />
+          </svg>
+          <div>Pauli OS</div>
         </div>
         <div className="today">
           <span>☀</span>
@@ -463,7 +495,6 @@ function Home({
               day: "numeric",
               month: "long",
             })}
-            <small>Um bom dia para começar de novo.</small>
           </div>
         </div>
         <button
@@ -480,16 +511,7 @@ function Home({
         </button>
       </header>
       <div className="world-top">
-        <div>
-          <span className="eyebrow">
-            {expanded ? "UM CANTINHO SÓ SEU" : "LAR, DOCE LAR"}
-          </span>
-          <h1>
-            {expanded
-              ? rooms[expanded].name
-              : "Bem-vinda ao seu pequeno mundo."}
-          </h1>
-        </div>
+        {expanded && <h1>{rooms[expanded].name}</h1>}
         {expanded ? (
           <button
             className="secondary"

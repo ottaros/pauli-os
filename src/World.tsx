@@ -1,7 +1,7 @@
 import { useEffect, useRef, useState } from "react";
 import type { Product } from "./supabase";
 import Avatar from "./Avatar";
-import RoomArt from "./RoomArt";
+
 import {
   approach,
   arrive,
@@ -28,58 +28,58 @@ export const rooms: Record<
   pauli: {
     name: "Quarto da Pauli",
     subtitle: "Seu tempo. Seus sentimentos. Seu lugar.",
-    x: 30,
-    y: 29,
-    floor: 48,
+    x: 35,
+    y: 22,
+    floor: 36,
   },
   studio: {
     name: "Escritório + estúdio",
     subtitle: "TikTok, criação e pequenas conquistas.",
-    x: 70,
-    y: 29,
-    floor: 48,
+    x: 71,
+    y: 23,
+    floor: 36,
   },
   living: {
     name: "Sala de estar",
     subtitle: "Pausa também faz parte do caminho.",
-    x: 30,
-    y: 61,
-    floor: 79,
+    x: 34,
+    y: 41,
+    floor: 61,
   },
   gpt: {
     name: "Quarto do Gepetinho",
     subtitle: "Uma oficina para ideias ainda sem nome.",
-    x: 70,
-    y: 61,
-    floor: 79,
+    x: 72,
+    y: 41,
+    floor: 61,
   },
   kitchen: {
     name: "Cozinha",
     subtitle: "O café está quase pronto.",
-    x: 14,
-    y: 86,
-    floor: 89,
+    x: 23,
+    y: 66,
+    floor: 87,
   },
   library: {
     name: "Biblioteca",
     subtitle: "Tudo que vale a pena guardar.",
-    x: 40,
-    y: 86,
-    floor: 89,
+    x: 49,
+    y: 66,
+    floor: 87,
   },
   basement: {
     name: "Porão",
     subtitle: "Algumas ideias precisam de pouca luz.",
-    x: 63,
-    y: 86,
-    floor: 89,
+    x: 79,
+    y: 66,
+    floor: 87,
   },
   cafe: {
     name: "Café Work",
     subtitle: "Um lugar para o trabalho, outro ritmo para o dia.",
-    x: 85,
-    y: 92,
-    floor: 95,
+    x: 8,
+    y: 88,
+    floor: 94,
   },
 };
 type Pose = "idle" | "walking" | "sitting" | "lying" | "using" | "drinking";
@@ -107,8 +107,8 @@ export const objects: ObjectSpec[] = [
     id: "bed",
     room: "pauli",
     label: "Deitar na cama",
-    x: 37,
-    y: 61,
+    x: 39,
+    y: 73,
     pose: "lying",
   },
   {
@@ -116,7 +116,7 @@ export const objects: ObjectSpec[] = [
     room: "pauli",
     label: "Rotina pessoal",
     x: 57,
-    y: 64,
+    y: 72,
     pose: "using",
     action: "routine",
   },
@@ -124,8 +124,8 @@ export const objects: ObjectSpec[] = [
     id: "yoga",
     room: "pauli",
     label: "Tapete de yoga",
-    x: 79,
-    y: 83,
+    x: 78,
+    y: 89,
     pose: "sitting",
     action: "yoga",
   },
@@ -133,8 +133,8 @@ export const objects: ObjectSpec[] = [
     id: "journal",
     room: "pauli",
     label: "Meu diário",
-    x: 19,
-    y: 62,
+    x: 15,
+    y: 72,
     pose: "sitting",
     action: "journal",
   },
@@ -142,7 +142,7 @@ export const objects: ObjectSpec[] = [
     id: "remember",
     room: "pauli",
     label: "Daily Remembers",
-    x: 67,
+    x: 59,
     y: 43,
     pose: "using",
     action: "remember",
@@ -151,17 +151,17 @@ export const objects: ObjectSpec[] = [
     id: "sofa",
     room: "living",
     label: "Sentar no sofá",
-    x: 57,
-    y: 54,
+    x: 60,
+    y: 70,
     pose: "sitting",
   },
-  { id: "fire", room: "living", label: "Lareira", x: 20, y: 61, pose: "using" },
+  { id: "fire", room: "living", label: "Lareira", x: 23, y: 63, pose: "using" },
   {
     id: "computer",
     room: "studio",
     label: "Abrir computador · TikTok",
-    x: 34,
-    y: 68,
+    x: 35,
+    y: 76,
     pose: "sitting",
     action: "computer",
   },
@@ -169,8 +169,8 @@ export const objects: ObjectSpec[] = [
     id: "shelf",
     room: "studio",
     label: "Estante de amostras",
-    x: 77,
-    y: 64,
+    x: 76,
+    y: 68,
     pose: "using",
     action: "shelf",
   },
@@ -178,24 +178,24 @@ export const objects: ObjectSpec[] = [
     id: "coffee",
     room: "kitchen",
     label: "Preparar café",
-    x: 18,
-    y: 67,
+    x: 21,
+    y: 59,
     pose: "using",
   },
   {
     id: "table",
     room: "kitchen",
     label: "Sentar à mesa",
-    x: 52,
-    y: 77,
+    x: 68,
+    y: 80,
     pose: "sitting",
   },
   {
     id: "newspaper",
     room: "kitchen",
     label: "Jornal do dia",
-    x: 56,
-    y: 67,
+    x: 60,
+    y: 66,
     pose: "sitting",
     action: "news",
   },
@@ -203,7 +203,7 @@ export const objects: ObjectSpec[] = [
     id: "radio",
     room: "kitchen",
     label: "Rádio",
-    x: 29,
+    x: 35,
     y: 52,
     pose: "using",
     action: "radio",
@@ -212,8 +212,8 @@ export const objects: ObjectSpec[] = [
     id: "archive",
     room: "library",
     label: "Livros e memórias",
-    x: 23,
-    y: 61,
+    x: 43,
+    y: 47,
     pose: "using",
     action: "archive",
   },
@@ -221,16 +221,16 @@ export const objects: ObjectSpec[] = [
     id: "reading",
     room: "library",
     label: "Sentar para ler",
-    x: 52,
-    y: 77,
+    x: 34,
+    y: 75,
     pose: "sitting",
   },
   {
     id: "ideas",
     room: "gpt",
     label: "Coisas que o Gepetinho está pensando",
-    x: 22,
-    y: 61,
+    x: 25,
+    y: 53,
     pose: "using",
     action: "idea",
   },
@@ -238,16 +238,16 @@ export const objects: ObjectSpec[] = [
     id: "armchair",
     room: "gpt",
     label: "Sentar na poltrona",
-    x: 52,
-    y: 77,
+    x: 28,
+    y: 76,
     pose: "sitting",
   },
   {
     id: "chat",
     room: "gpt",
     label: "Conversar com Gepetinho",
-    x: 62,
-    y: 62,
+    x: 60,
+    y: 64,
     pose: "using",
     action: "chat",
   },
@@ -255,8 +255,8 @@ export const objects: ObjectSpec[] = [
     id: "experiment",
     room: "basement",
     label: "Caixa de experimentos",
-    x: 21,
-    y: 69,
+    x: 51,
+    y: 70,
     pose: "using",
     action: "experiment",
   },
@@ -264,17 +264,21 @@ export const objects: ObjectSpec[] = [
     id: "work",
     room: "cafe",
     label: "Sentar e abrir trabalho",
-    x: 52,
-    y: 77,
+    x: 33,
+    y: 86,
     pose: "sitting",
     action: "work",
   },
 ];
-const crops: Partial<Record<Room, string>> = {
-  pauli: "230 230 590 270",
-  studio: "850 250 480 255",
-  living: "220 515 590 320",
-  gpt: "850 520 480 315",
+const crops: Record<Room, string> = {
+  pauli: "198 145 490 200",
+  studio: "700 176 390 170",
+  living: "190 363 440 216",
+  gpt: "704 362 390 217",
+  kitchen: "76 603 392 235",
+  library: "477 602 282 238",
+  basement: "775 602 423 238",
+  cafe: "290 955 820 299",
 };
 const initial: Resident = {
   room: "living",
@@ -466,6 +470,7 @@ export default function World({
   }
   function renderResident(p: Resident, npc = false) {
     if (expanded && p.room !== expanded) return null;
+    if (!expanded && p.room === "cafe") return null;
     const r = rooms[p.room];
     const mainX = r.x + (p.x - 50) * 0.28,
       mainY = r.floor + (p.y - 80) * 0.17;
@@ -525,16 +530,22 @@ export default function World({
               );
             if (!expanded) {
               const rawY = ((e.clientY - r.top) / r.height) * 100;
-              if (rawY < 30 || rawY > 83 || x < 16 || x > 88) return;
+              if (rawY < 23 || rawY > 89 || x < 10 || x > 93) return;
               const dest: Room =
-                rawY < 51
-                  ? x < 54
+                rawY < 37
+                  ? x < 55
                     ? "pauli"
                     : "studio"
-                  : x < 54
-                    ? "living"
-                    : "gpt";
-              const target = { x, y: rawY < 51 ? 48 : 79 },
+                  : rawY < 62
+                    ? x < 55
+                      ? "living"
+                      : "gpt"
+                    : x < 38
+                      ? "kitchen"
+                      : x < 61
+                        ? "library"
+                        : "basement";
+              const target = { x, y: rooms[dest].floor },
                 from = latest.current,
                 old = rooms[from.room];
               const path = worldPath(
@@ -575,142 +586,31 @@ export default function World({
             schedule(() => setPauli((p) => ({ ...p, pose: "idle" })), 1500);
           }}
         >
-          {!expanded ? (
-            <img
-              className="map-art"
-              src="/chalet.webp"
-              alt="O chalé completo nas montanhas"
-            />
-          ) : crops[expanded] ? (
-            <svg
-              className="room-art"
-              viewBox={crops[expanded]}
-              preserveAspectRatio="none"
-              aria-label={rooms[expanded].name}
-              role="img"
-            >
-              <image href="/chalet.webp" width="1536" height="1024" />
-            </svg>
-          ) : (
-            <RoomArt room={expanded} />
-          )}
-          {expanded === "gpt" && (
-            <svg
-              className="gpt-details"
-              viewBox="0 0 900 600"
-              aria-hidden="true"
-            >
-              <g opacity=".94">
-                <path
-                  d="M20 38H265V190H20Z"
-                  fill="#153346"
-                  stroke="#b18851"
-                  strokeWidth="5"
-                />
-                <text
-                  x="142"
-                  y="68"
-                  textAnchor="middle"
-                  fill="#d8ba7e"
-                  fontFamily="serif"
-                  fontSize="17"
-                >
-                  atlas das ideias improváveis
-                </text>
-                <path
-                  d="m48 141 35-37 47 47 60-56 45 64M83 104l47 47 8-54"
-                  stroke="#b79659"
-                  fill="none"
-                />
-                {[
-                  [48, 141],
-                  [83, 104],
-                  [130, 151],
-                  [190, 95],
-                  [235, 159],
-                  [138, 97],
-                ].map(([x, y]) => (
-                  <circle key={x} cx={x} cy={y} r="4" fill="#ffe3a3" />
-                ))}
-                <path
-                  d="M740 420v70m-38 0h76"
-                  stroke="#a8824c"
-                  strokeWidth="5"
-                />
-                <ellipse
-                  cx="740"
-                  cy="414"
-                  rx="38"
-                  ry="13"
-                  fill="none"
-                  stroke="#d9b477"
-                  strokeWidth="3"
-                  transform="rotate(-25 740 414)"
-                />
-                <ellipse
-                  cx="740"
-                  cy="414"
-                  rx="15"
-                  ry="36"
-                  fill="none"
-                  stroke="#d9b477"
-                  strokeWidth="3"
-                />
-                <circle cx="740" cy="414" r="13" fill="#efd79a" />
-                <path
-                  d="M288 60h110v110H288Z"
-                  fill="#e9d7b0"
-                  transform="rotate(7 343 115)"
-                />
-                <text
-                  x="301"
-                  y="100"
-                  fill="#594833"
-                  fontSize="14"
-                  fontFamily="serif"
-                >
-                  e se amanhã
-                </text>
-                <text
-                  x="305"
-                  y="122"
-                  fill="#594833"
-                  fontSize="14"
-                  fontFamily="serif"
-                >
-                  tivesse outra
-                </text>
-                <text
-                  x="312"
-                  y="145"
-                  fill="#594833"
-                  fontSize="14"
-                  fontFamily="serif"
-                >
-                  gravidade?
-                </text>
-              </g>
-            </svg>
-          )}
-          {!expanded && (
-            <div className="annex-art" aria-hidden="true">
-              <span>⌂ cozinha</span>
-              <span>▥ biblioteca</span>
-              <span>◈ porão</span>
-            </div>
-          )}
+          <svg
+            className="room-art"
+            viewBox={expanded ? crops[expanded] : "0 0 1254 946"}
+            preserveAspectRatio="none"
+            aria-label={
+              expanded
+                ? rooms[expanded].name
+                : "O chalé completo com sete cômodos"
+            }
+            role="img"
+          >
+            <image href="/chalet-expanded.webp" width="1254" height="1254" />
+          </svg>
           <div className="atmosphere" aria-hidden="true" />
           {(!expanded || expanded === "living") && (
             <div
               className={`hearth ${fireplace ? "lit" : ""}`}
               style={
                 expanded
-                  ? { left: "12.5%", top: "31%", width: "13%", height: "24%" }
+                  ? { left: "15.5%", top: "33%", width: "13%", height: "23%" }
                   : {
-                      left: "19.15%",
-                      top: "59.8%",
-                      width: "4.3%",
-                      height: "6.2%",
+                      left: "20.6%",
+                      top: "46.2%",
+                      width: "4.5%",
+                      height: "5.3%",
                     }
               }
             >
