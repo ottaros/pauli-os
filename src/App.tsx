@@ -16,6 +16,11 @@ import {
   type Metrics,
   type Checkin,
 } from "./supabase";
+import HouseContent, {
+  contentPanels,
+  contentTitles,
+  useHouseState,
+} from "./HouseContent";
 import World, { rooms, type Room } from "./World";
 import { localDay, progress } from "./domain.mjs";
 const money = (n: number) =>
@@ -256,6 +261,7 @@ function Home({
   onRecovered: () => void;
 }) {
   const uid = session.user.id;
+  const house = useHouseState(uid);
   const [day, setDay] = useState(localDay());
   const [checkin, setCheckin] = useState<Checkin | null>(null);
   const [products, setProducts] = useState<Product[]>([]);
@@ -438,11 +444,7 @@ function Home({
   const count = (id: string) =>
     videos.filter((v) => v.product_id === id && v.posted_at).length;
   const tasks = checkin
-    ? [
-        checkin.yoga_done,
-        checkin.morning_routine_done,
-        checkin.briefing_read,
-      ].filter(Boolean).length
+    ? [checkin.yoga_done, checkin.morning_routine_done].filter(Boolean).length
     : 0;
   return (
     <main className="home">
@@ -499,10 +501,15 @@ function Home({
             ← Voltar à casa
           </button>
         ) : (
-          <span className="day-badge">✿ {tasks}/3 cuidados de hoje</span>
+          <span className="day-badge">✿ {tasks}/2 cuidados de hoje</span>
         )}
       </div>
       <World
+        uid={uid}
+        fireplace={house.state.fireplace_on}
+        onFire={() =>
+          void house.save({ fireplace_on: !house.state.fireplace_on })
+        }
         expanded={expanded}
         onSelect={setSelected}
         onAction={setPanel}
@@ -510,6 +517,11 @@ function Home({
         images={images}
         onProduct={openProduct}
       />
+      {house.error && (
+        <p role="alert" className="inline-error">
+          Estado da casa: {house.error}
+        </p>
+      )}
       {selected && (
         <section className="room-choice" aria-label="Cômodo selecionado">
           <div>
@@ -523,7 +535,7 @@ function Home({
               setSelected(null);
             }}
           >
-            Expandir / entrar no cômodo ↗
+            Entrar / expandir cômodo ↗
           </button>
           <button
             aria-label="Cancelar seleção"
@@ -567,7 +579,9 @@ function Home({
               rest: "Pode respirar. Você está em casa.",
               gpt: "Oficina de ideias do Gepetinho",
               stars: "O céu também é um lugar para pensar.",
-            }[panel] || "Seu chalé"
+            }[panel] ||
+            contentTitles[panel] ||
+            "Seu chalé"
           }
           onClose={() => setPanel("")}
         >
@@ -581,7 +595,19 @@ function Home({
               {toast}
             </p>
           )}
-          {["routine", "journal"].includes(panel) && (
+          {contentPanels.includes(panel) && (
+            <HouseContent
+              key={panel}
+              panel={panel}
+              uid={uid}
+              day={day}
+              checkin={checkin}
+              updateCheck={updateCheck}
+              onPanel={setPanel}
+              house={house}
+            />
+          )}
+          {panel === "routine" && (
             <>
               {checkin ? (
                 <>
@@ -596,7 +622,6 @@ function Home({
                           [
                             ["morning_routine_done", "☀", "Rotina matinal"],
                             ["yoga_done", "✧", "Um tempo para yoga"],
-                            ["briefing_read", "✉", "Ler meu briefing"],
                           ] as const
                         ).map(([key, icon, label]) => (
                           <label key={key}>
@@ -614,55 +639,12 @@ function Home({
                           </label>
                         ))}
                       </div>
-                      <details>
-                        <summary>O briefing de hoje</summary>
-                        <p className="preserve">{briefing}</p>
-                      </details>
                     </>
                   )}
-                  <form
-                    key={checkin.id}
-                    onSubmit={(e) => {
-                      e.preventDefault();
-                      const f = new FormData(e.currentTarget);
-                      void updateCheck({
-                        notes: String(f.get("notes")),
-                        tiktok_videos_count: Number(
-                          f.get("tiktok_videos_count"),
-                        ),
-                        shopee_videos_count: Number(
-                          f.get("shopee_videos_count"),
-                        ),
-                      });
-                    }}
-                  >
-                    <label>
-                      Como você está? O que quer guardar de hoje?
-                      <textarea
-                        name="notes"
-                        rows={5}
-                        defaultValue={checkin.notes || ""}
-                        placeholder="Hoje eu quero…"
-                      />
-                    </label>
-                    <div className="form-grid">
-                      <Field
-                        label="Vídeos TikTok hoje"
-                        name="tiktok_videos_count"
-                        type="number"
-                        value={checkin.tiktok_videos_count}
-                      />
-                      <Field
-                        label="Vídeos Shopee hoje"
-                        name="shopee_videos_count"
-                        type="number"
-                        value={checkin.shopee_videos_count}
-                      />
-                    </div>
-                    <button className="primary" disabled={busy}>
-                      Guardar meu dia
-                    </button>
-                  </form>
+                  <p>
+                    Seu checklist pessoal. Para escrever sobre o dia, abra o
+                    diário no criado-mudo.
+                  </p>
                 </>
               ) : (
                 <p>Carregando o diário…</p>
